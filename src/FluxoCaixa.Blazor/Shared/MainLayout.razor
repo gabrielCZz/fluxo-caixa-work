@@ -1,0 +1,17 @@
+@inherits LayoutComponentBase
+
+<div class="app-container">
+    <div class="sidebar">
+        <h3>Fluxo de Caixa</h3>
+        <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
+        <NavLink href="/importacao">Importação</NavLink>
+        <NavLink href="/revisao">Revisão</NavLink>
+        <NavLink href="/fluxo">Fluxo Mensal</NavLink>
+        <NavLink href="/cadastros">Cadastros</NavLink>
+        <NavLink href="/usuarios">Usuários</NavLink>
+        <NavLink href="/login">Login</NavLink>
+    </div>
+    <div class="content">
+        @Body
+    </div>
+</div>

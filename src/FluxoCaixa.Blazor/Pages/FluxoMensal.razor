@@ -1,0 +1,93 @@
+@page "/fluxo"
+@inject HttpClient Http
+
+<h1>Fluxo Mensal</h1>
+<div class="card">
+    <label>Período (YYYY-MM)</label>
+    <input @bind="Periodo" />
+    <label>Modo</label>
+    <select @bind="Modo">
+        <option value="ambos">Ambos</option>
+        <option value="previsto">Previsto</option>
+        <option value="realizado">Realizado</option>
+    </select>
+    <button @onclick="Carregar">Carregar</button>
+</div>
+
+@if (Fluxo is not null)
+{
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Grupo/Subgrupo</th>
+                    @foreach (var coluna in Fluxo.colunas)
+                    {
+                        <th>@coluna.dia</th>
+                    }
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var linha in Fluxo.linhas)
+                {
+                    @RenderLinha(linha, 0)
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private string Periodo { get; set; } = DateTime.Now.ToString("yyyy-MM");
+    private string Modo { get; set; } = "ambos";
+    private FluxoResultadoDto? Fluxo { get; set; }
+
+    private async Task Carregar()
+    {
+        Fluxo = await Http.GetFromJsonAsync<FluxoResultadoDto>($"api/fluxo?periodo={Periodo}&modo={Modo}");
+    }
+
+    private RenderFragment RenderLinha(FluxoLinhaDto linha, int nivel) => builder =>
+    {
+        var seq = 0;
+        builder.OpenElement(seq++, "tr");
+        builder.OpenElement(seq++, "td");
+        builder.AddContent(seq++, new string(' ', nivel * 2) + linha.nome);
+        builder.CloseElement();
+        foreach (var coluna in Fluxo!.colunas)
+        {
+            builder.OpenElement(seq++, "td");
+            builder.AddContent(seq++, linha.valoresPorDia.TryGetValue(coluna.dia, out var valor) ? valor : 0);
+            builder.CloseElement();
+        }
+        builder.OpenElement(seq++, "td");
+        builder.AddContent(seq++, linha.totalMes);
+        builder.CloseElement();
+        builder.CloseElement();
+
+        foreach (var filho in linha.filhos)
+        {
+            builder.AddContent(seq++, RenderLinha(filho, nivel + 1));
+        }
+    };
+
+    private sealed class FluxoResultadoDto
+    {
+        public List<FluxoColunaDto> colunas { get; set; } = new();
+        public List<FluxoLinhaDto> linhas { get; set; } = new();
+    }
+
+    private sealed class FluxoColunaDto
+    {
+        public int dia { get; set; }
+    }
+
+    private sealed class FluxoLinhaDto
+    {
+        public string nome { get; set; } = string.Empty;
+        public Dictionary<int, decimal> valoresPorDia { get; set; } = new();
+        public decimal totalMes { get; set; }
+        public List<FluxoLinhaDto> filhos { get; set; } = new();
+    }
+}
