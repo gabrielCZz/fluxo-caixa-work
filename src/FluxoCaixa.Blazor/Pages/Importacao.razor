@@ -1,0 +1,45 @@
+@page "/importacao"
+@inject HttpClient Http
+
+<h1>Importação</h1>
+<div class="card">
+    <InputFile OnChange="HandleFile" />
+    <button @onclick="Enviar">Enviar</button>
+    @if (!string.IsNullOrWhiteSpace(Mensagem))
+    {
+        <p>@Mensagem</p>
+    }
+</div>
+
+@code {
+    private IBrowserFile? Arquivo { get; set; }
+    private string? Mensagem { get; set; }
+
+    private void HandleFile(InputFileChangeEventArgs e)
+    {
+        Arquivo = e.File;
+    }
+
+    private async Task Enviar()
+    {
+        if (Arquivo is null)
+        {
+            Mensagem = "Selecione um arquivo.";
+            return;
+        }
+
+        using var content = new MultipartFormDataContent();
+        var stream = Arquivo.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+        content.Add(new StreamContent(stream), "arquivo", Arquivo.Name);
+
+        var response = await Http.PostAsync("api/importacoes/upload", content);
+        if (response.IsSuccessStatusCode)
+        {
+            Mensagem = "Importação enviada com sucesso.";
+        }
+        else
+        {
+            Mensagem = "Falha ao importar.";
+        }
+    }
+}

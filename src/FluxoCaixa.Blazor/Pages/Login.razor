@@ -1,0 +1,36 @@
+@page "/login"
+@inject FluxoCaixa.Blazor.Services.AuthService AuthService
+@inject NavigationManager Navigation
+
+<h1>Login</h1>
+<div class="card">
+    <label>Email</label>
+    <input @bind="Email" />
+    <label>Senha</label>
+    <input type="password" @bind="Password" />
+    <button @onclick="HandleLogin">Entrar</button>
+    @if (!string.IsNullOrWhiteSpace(Mensagem))
+    {
+        <p>@Mensagem</p>
+    }
+</div>
+
+@code {
+    private string Email { get; set; } = string.Empty;
+    private string Password { get; set; } = string.Empty;
+    private string? Mensagem { get; set; }
+
+    private async Task HandleLogin()
+    {
+        var ok = await AuthService.LoginAsync(Email, Password);
+        if (ok)
+        {
+            Mensagem = null;
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            Mensagem = "Falha no login.";
+        }
+    }
+}

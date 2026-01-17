@@ -1,0 +1,53 @@
+@page "/revisao"
+@inject HttpClient Http
+
+<h1>Revisão e Classificação</h1>
+<div class="card">
+    <button @onclick="Carregar">Carregar não classificados</button>
+    @if (Lancamentos.Count == 0)
+    {
+        <p>Nenhum lançamento carregado.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Contraparte</th>
+                    <th>Valor</th>
+                    <th>Tipo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Lancamentos)
+                {
+                    <tr>
+                        <td>@item.dataEfetiva</td>
+                        <td>@item.contraparteNome</td>
+                        <td>@item.valor</td>
+                        <td>@item.tipo</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<LancamentoDto> Lancamentos { get; set; } = new();
+
+    private async Task Carregar()
+    {
+        var response = await Http.GetFromJsonAsync<List<LancamentoDto>>("api/lancamentos?naoClassificados=true");
+        Lancamentos = response ?? new List<LancamentoDto>();
+    }
+
+    private sealed class LancamentoDto
+    {
+        public string dataEfetiva { get; set; } = string.Empty;
+        public string contraparteNome { get; set; } = string.Empty;
+        public decimal valor { get; set; }
+        public string tipo { get; set; } = string.Empty;
+    }
+}
